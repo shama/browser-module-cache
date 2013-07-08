@@ -7,7 +7,7 @@ function Cache(opts) {
   this.ready = false
   this.db = leveljs(opts.name)
   this.db.open(function(err, db) {
-    if (err) return console.log(err)
+    if (err) return console.error(err)
     self.ready = true
   })
 }
@@ -51,29 +51,31 @@ Cache.prototype.get = function(module, cb) {
       })
     })
   } else {
-    self.db.idb.count(function(count) {
-      if (count < 1) return cb(null, res)
-      function done() {
-        count--
-        if (count < 1) cb(null, res)
+    var it = self.db.iterator()
+    it.next(function(err, key, val) {
+      if (key == null) {
+        cb(null, res)
+        return
       }
-      self.db.idb.iterate(function(val, info) {
-        if (!info) return
-        var key = info.key.split(':')
-        if (!res[key[0]]) res[key[0]] = Object.create(null)
-        if (key[1] === 'package') val = JSON.parse(val)
-        res[key[0]][key[1]] = val
-        done()
-      })
+      if (!Array.isArray(key)) key = key.split(':')
+      if (!res[key[0]]) res[key[0]] = Object.create(null)
+      if (key[1] === 'package') val = JSON.parse(val)
+      res[key[0]][key[1]] = val
     })
   }
 }
 
 Cache.prototype.clear = function(cb) {
   var self = this
-  self.db.idb.clear(function() {
-    cb(null)
-  }, function(err) {
-    cb(err)
+  var it = self.db.iterator()
+  it.next(function(err, key, val) {
+    if (key == null) {
+      if (cb) cb(null)
+      return
+    }
+    if (Array.isArray(key)) key = key.join(':')
+    self.db.del(key, function(err) {
+      if (err) console.error(err)
+    })
   })
 }
