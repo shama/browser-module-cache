@@ -68,6 +68,7 @@ cache.clear(function(err) {
 ```
 
 ## release history
+* 0.1.2 - fallsback to memdown if indexedDB not found
 * 0.1.1 - return empty object if none found during get
 * 0.1.0 - initial release
 

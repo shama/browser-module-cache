@@ -1,7 +1,7 @@
 {
   "name": "browser-module-cache",
   "description": "Caches browserify-cdn modules using level.js",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "homepage": "https://github.com/shama/browser-module-cache",
   "author": {
     "name": "Kyle Robinson Young",
@@ -25,7 +25,8 @@
     "node": ">= 0.8.0"
   },
   "dependencies": {
-    "level-js": "~1.0.7"
+    "level-js": "~1.0.7",
+    "memdown": "~0.2.1"
   },
   "devDependencies": {},
   "keywords": [
