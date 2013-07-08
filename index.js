@@ -52,6 +52,7 @@ Cache.prototype.get = function(module, cb) {
     })
   } else {
     self.db.idb.count(function(count) {
+      if (count < 1) return cb(null, res)
       function done() {
         count--
         if (count < 1) cb(null, res)
