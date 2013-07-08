@@ -1,11 +1,14 @@
 var leveljs = require('level-js')
+var MemDOWN = require('memdown')
+var hasIDB = !!(window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB)
 
 function Cache(opts) {
   var self = this
   opts = opts || {}
   opts.name = opts.name || 'browser-module-cache'
   this.ready = false
-  this.db = leveljs(opts.name)
+  if (hasIDB) this.db = leveljs(opts.name)
+  else this.db = new MemDOWN(opts.name)
   this.db.open(function(err, db) {
     if (err) return console.error(err)
     self.ready = true
@@ -51,31 +54,50 @@ Cache.prototype.get = function(module, cb) {
       })
     })
   } else {
-    var it = self.db.iterator()
-    it.next(function(err, key, val) {
-      if (key == null) {
-        cb(null, res)
-        return
-      }
-      if (!Array.isArray(key)) key = key.split(':')
-      if (!res[key[0]]) res[key[0]] = Object.create(null)
-      if (key[1] === 'package') val = JSON.parse(val)
-      res[key[0]][key[1]] = val
+    this._all(function(err, all) {
+      if (err) return cb(err)
+      Object.keys(all).forEach(function(key) {
+        var val = all[key]
+        key = key.split(':')
+        if (!res[key[0]]) res[key[0]] = Object.create(null)
+        if (key[1] === 'package') val = JSON.parse(val)
+        res[key[0]][key[1]] = val
+      })
+      cb(null, res)
     })
   }
 }
 
 Cache.prototype.clear = function(cb) {
   var self = this
-  var it = self.db.iterator()
-  it.next(function(err, key, val) {
+  this._all(function(err, all) {
+    if (err) return cb(err)
+    var ops = Object.keys(all).map(function(key) {
+      return {type: 'del', key: key}
+    })
+    self.db.batch(ops, cb || function() {})
+  })
+}
+
+Cache.prototype._all = function(cb) {
+  var self = this
+  var res = Object.create(null)
+  function onItem(err, key, val) {
     if (key == null) {
-      if (cb) cb(null)
+      cb(null, res)
       return
     }
     if (Array.isArray(key)) key = key.join(':')
-    self.db.del(key, function(err) {
-      if (err) console.error(err)
+    res[key] = val
+  }
+  // hack to make level.js and memdown work the same
+  // TODO: fix upstream
+  if (hasIDB) {
+    this.db.iterator().next(onItem)
+  } else {
+    this.db._keys.forEach(function(key) {
+      onItem(null, key, self.db._store['$' + key])
     })
-  })
+    onItem(null, null)
+  }
 }
