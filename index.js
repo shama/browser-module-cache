@@ -7,7 +7,7 @@ function Cache(opts) {
   opts = opts || {}
   opts.name = opts.name || 'browser-module-cache'
   this.ready = false
-  if (hasIDB) this.db = leveljs(opts.name)
+  if (hasIDB && !(opts.inMemory)) this.db = leveljs(opts.name)
   else this.db = new MemDOWN(opts.name)
   this.db.open(function(err, db) {
     if (err) return console.error(err)
