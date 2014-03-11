@@ -19,6 +19,7 @@ var createCache = require('browser-module-cache')
 ```javascript
 var cache = createCache({
   name: 'browser-module-cache' // name of level.js database
+  inMemory: false // Whether to force usage of memdown
 })
 ```
 
@@ -68,6 +69,7 @@ cache.clear(function(err) {
 ```
 
 ## release history
+* 0.1.3 - Add `inMemory` option to memdown (@maxogden)
 * 0.1.2 - fallsback to memdown if indexedDB not found
 * 0.1.1 - return empty object if none found during get
 * 0.1.0 - initial release
