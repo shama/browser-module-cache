@@ -18,7 +18,7 @@ var createCache = require('browser-module-cache')
 
 ```javascript
 var cache = createCache({
-  name: 'browser-module-cache' // name of level.js database
+  name: 'browser-module-cache', // name of level.js database
   inMemory: false // Whether to force usage of memdown
 })
 ```
